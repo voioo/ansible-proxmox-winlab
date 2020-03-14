@@ -1,0 +1,14 @@
+---
+- hosts: proxmox
+  gather_facts: false
+  roles:
+    - win2k19_base_template
+    - primary_dc_build
+    - replica_dc_build
+
+- hosts: dc_machines
+  gather_facts: false
+  roles:
+    - common
+    - primary_dc_provision
+    - replica_dc_provision

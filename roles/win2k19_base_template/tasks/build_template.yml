@@ -1,0 +1,62 @@
+# Create temp directory
+  - name: Create temp directory on Proxmox
+    file:
+      path: /tmp/{{template_vmid}}
+      state: directory
+
+  # Template out autounattend answer file
+  - name: Template out Win2k19 autounattend answer file
+    template:
+      src: ../templates/autounattend.xml.tpl
+      dest: /tmp/{{template_vmid}}/autounattend.xml
+
+  # Copy drivers & scripts for ISO
+  - name: Temp copy VirtIO drivers and scripts for ISO
+    copy:
+      src: ../common/files/iso-files/
+      dest: /tmp/{{template_vmid}}/
+
+  # Generate ISO with drivers, scripts, & answer file
+  - name: Generate ISO file
+    become: true
+    command: "genisoimage -J -r -o /var/lib/vz/template/iso/{{template_vmid}}Provision.iso /tmp/{{template_vmid}}/"
+    register: iso_created
+
+  # Create VM
+  - name: Create VM
+    command: "qm create {{template_vmid}} --name {{template_name}} --sockets {{vm_sockets}} --cores {{vm_cores}} --memory {{vm_memory_mb}} --ide2 file={{os_iso_location}},media=cdrom --ide3 file=local:iso/{{template_vmid}}Provision.iso,media=cdrom --net0 model=virtio,bridge=vmbr0,firewall=0 --scsihw virtio-scsi-pci --scsi0 {{pve_storage_id}}:{{drive_size_gb}},format=raw --ostype {{vm_os_type}}"
+
+  # Start VM
+  - name: Start VM
+    command: "qm start {{template_vmid}}"
+
+  # Wait for VM build
+  - name: Wait for OS install, config, update, sysprep
+    command: "qm wait {{template_vmid}}"
+    async: 7200
+    poll: 30
+
+  # Remove CD drives
+  - name: Remove IDE CD Drives
+    command: "qm set {{template_vmid}} --delete ide2 --delete ide3"
+
+  # Create template from VM
+  - name: Create template
+    command: "qm template {{template_vmid}}"
+
+  # Remove ISO
+  - name: Remove Unattend ISO file
+    file:
+      path: /var/lib/vz/template/iso/{{template_vmid}}Provision.iso
+      state: absent
+
+  # Cleanup temp files
+  - name: Cleanup temp files used for ISO build
+    file:
+      path: /tmp/{{template_vmid}}
+      state: absent
+    when: iso_created.changed
+
+  - name: Done
+    debug:
+      msg: Template build {{template_vmid}}, with VMID {{template_vmid}} complete.

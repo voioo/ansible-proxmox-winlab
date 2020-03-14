@@ -1,0 +1,6 @@
+---
+domain: "homelab.local"
+netbios_domain: "homelab"
+domain_admin: "administrator@{{ domain }}"
+domain_admin_password: 'SuperSecretPass!'
+domain_safemode_password: 'SuperSecret2020!'

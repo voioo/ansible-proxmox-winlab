@@ -1,0 +1,6 @@
+- shell: pvesh get /cluster/nextid -vmid {{template_vmid}}
+  register: check_vmid_result
+  ignore_errors: True
+
+- include: build_template.yml
+  when: check_vmid_result.rc == 0

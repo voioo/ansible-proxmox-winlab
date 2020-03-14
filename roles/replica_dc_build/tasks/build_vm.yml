@@ -1,0 +1,63 @@
+---
+  # Create temp directory
+  - name: Create temp directory
+    file:
+      path: /tmp/{{clone_name}}
+      state: directory
+  
+  # Template out autounattend answer file    
+  - name: Template out autounattend answer file        
+    template:
+      src: ../templates/autounattend-dc.xml.tpl
+      dest: /tmp/{{clone_name}}/Autounattend.xml
+
+  # Create ISO with drivers, scripts, & answer file    
+  - name: Create ISO file
+    become: true
+    command: "genisoimage -J -r -o /var/lib/vz/template/iso/{{clone_name}}Provision.iso /tmp/{{clone_name}}/"
+    register: iso_created 
+
+  # Create VM from template
+  - name: Create VM
+    command: "qm clone {{template_vmid}} {{clone_vmid}} --name {{clone_name}} --full false" 
+
+  - name: Create cdrom on VM and insert win ISO
+    command: "qm set {{clone_vmid}} --ide2 file={{os_iso_location}},media=cdrom"
+
+  - name: Create cdrom on VM and insert autounattend file
+    command: "qm set {{clone_vmid}} --ide3 file=local:iso/{{clone_name}}Provision.iso,media=cdrom"
+
+  # Start VM
+  - name: Start VM
+    command: "qm start {{clone_vmid}}"
+
+  # Wait for VM build
+  - name: Wait for OS setup
+    command: "qm wait {{clone_vmid}}"    
+    async: 7200
+    poll: 30
+
+  # Remove CD drives
+  - name: Remove IDE CD Drives
+    command: "qm set {{clone_vmid}} --delete ide2 --delete ide3"
+
+  # Remove ISO from proxmox storage
+  - name: Remove Unattend ISO file
+    file:
+      path: /var/lib/vz/template/iso/{{clone_name}}Provision.iso
+      state: absent
+
+  # Cleanup temp files
+  - name: Cleanup temp files used for ISO build
+    file:
+      path: /tmp/{{clone_name}}
+      state: absent
+    when: iso_created.changed
+
+  # Start VM
+  - name: Start VM again
+    command: "qm start {{clone_vmid}}"
+
+  - name: Done
+    debug:
+      msg: VM build {{clone_name}}, with VMID {{clone_vmid}} complete.
