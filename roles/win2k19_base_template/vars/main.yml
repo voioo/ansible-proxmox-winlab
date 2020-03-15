@@ -3,8 +3,8 @@
 template_name: winsrv2k19-tpl
 template_vmid: 9000
 pve_storage_id: local-lvm
-vm_cores: 4
-vm_sockets: 1
+vm_cores: 2
+vm_sockets: 2
 vm_memory_mb: 4096
 vm_os_type: win10
 # vm_os_type must be valid value per https://pve.proxmox.com/wiki/Qemu/KVM_Virtual_Machines
