@@ -6,9 +6,14 @@
     - primary_dc_build
     - replica_dc_build
 
-- hosts: dc_machines
+- hosts: primary_dc_vm
   gather_facts: false
   roles:
     - common
     - primary_dc_provision
+
+- hosts: replica_dc_vm
+  gather_facts: false
+  roles:
+    - common
     - replica_dc_provision

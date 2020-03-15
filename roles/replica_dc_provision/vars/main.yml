@@ -1,7 +1,8 @@
-clone_name: 2k19-DC1
-replica_dc_static_ip: 192.168.1.221
+clone_name: 2k19-DC2
+primary_dc_static_ip: 192.168.1.221
+replica_dc_static_ip: 192.168.1.222
 replica_dc_default_gw: 192.168.1.1
-clone_vmid: 9001
+clone_vmid: 9002
 pve_storage_id: local-lvm
 template_vmid: 9000
 vm_cores: 4

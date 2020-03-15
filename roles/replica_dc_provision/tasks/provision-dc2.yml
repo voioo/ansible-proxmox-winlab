@@ -1,9 +1,11 @@
 ---
-- name: change DNS server
-  #when: not ansible_windows_domain_member
-  win_dns_client:
-    adapter_names: '*'
-    ipv4_addresses: "{{ replica_dc_static_ip }}"
+- name: Check if firewall already disabled
+  win_shell: (Get-NetFirewallProfile -Name Domain).Enabled
+  register: firewall_status
+
+- name: Disable firewall
+  win_shell: Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False 
+  when: firewall_status.rc != 0
 
 - name: join domain
   win_domain_membership:

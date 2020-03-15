@@ -1,5 +1,5 @@
 ---
-domain: "homelab.local"
+domain: "homelab.lab"
 netbios_domain: "homelab"
 domain_admin: "administrator@{{ domain }}"
 domain_admin_password: 'SuperSecretPass!'
